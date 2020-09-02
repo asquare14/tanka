@@ -2,7 +2,6 @@ package jsonnet
 
 import (
 	"io/ioutil"
-	"path/filepath"
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
@@ -17,16 +16,21 @@ type Modifier func(vm *jsonnet.VM) error
 
 // EvaluateFile opens the file, reads it into memory and evaluates it afterwards (`Evaluate()`)
 func EvaluateFile(jsonnetFile string, mods ...Modifier) (string, error) {
-	bytes, err := ioutil.ReadFile(jsonnetFile)
+	entrypoint, err := jpath.GetEntrypoint(jsonnetFile)
+	if err != nil {
+		return "", errors.Wrap(err, "resolving entrypoint")
+	}
+
+	bytes, err := ioutil.ReadFile(entrypoint)
 	if err != nil {
 		return "", err
 	}
 
-	jpath, _, _, err := jpath.Resolve(filepath.Dir(jsonnetFile))
+	resolved_jpath, _, _, err := jpath.Resolve(entrypoint)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving jpath")
 	}
-	return Evaluate(jsonnetFile, string(bytes), jpath, mods...)
+	return Evaluate(entrypoint, string(bytes), resolved_jpath, mods...)
 }
 
 // Evaluate renders the given jsonnet into a string

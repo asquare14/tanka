@@ -117,9 +117,8 @@ func parseSpec(baseDir, rootDir string) (*v1alpha1.Config, error) {
 	return config, nil
 }
 
-// evalJsonnet evaluates the jsonnet environment at the given directory starting with
-// `main.jsonnet`
-func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string) (interface{}, error) {
+// evalJsonnet evaluates the jsonnet environment at the given directory
+func evalJsonnet(entrypoint string, env *v1alpha1.Config, extCode map[string]string) (interface{}, error) {
 	jsonEnv, err := json.Marshal(env)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshalling environment config")
@@ -132,10 +131,7 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string
 		ext = append(ext, jsonnet.WithExtCode(k, v))
 	}
 
-	raw, err := jsonnet.EvaluateFile(
-		filepath.Join(baseDir, "main.jsonnet"),
-		ext...,
-	)
+	raw, err := jsonnet.EvaluateFile(entrypoint, ext...)
 	if err != nil {
 		return nil, err
 	}
